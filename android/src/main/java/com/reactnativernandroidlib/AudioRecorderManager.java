@@ -1,6 +1,5 @@
 package com.reactnativernandroidlib;
 
-
 import android.Manifest;
 import android.content.Context;
 
@@ -27,6 +26,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
 import android.media.MediaRecorder;
+import android.media.AudioManager;
 import android.util.Base64;
 import android.util.Log;
 
@@ -40,6 +40,49 @@ import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.IllegalAccessException;
 import java.lang.NoSuchMethodException;
+
+
+class StopWatch {
+ private long start;
+ private float elapsedTime = 0;
+ private boolean paused = true;
+
+ public StopWatch() {
+ }
+
+ public void start() {
+   start = System.currentTimeMillis();
+   paused = false;
+ }
+
+ public float stop() {
+   if (!paused) {
+     long now = System.currentTimeMillis();
+     elapsedTime += (now - start) / 1000f;
+     paused = true;
+   }
+
+   return elapsedTime;
+ }
+
+ public void reset() {
+   start = 0;
+   elapsedTime = 0;
+   paused = true;
+ }
+
+ public float getTimeSeconds() {
+   float seconds;
+
+   if (paused) {
+     seconds = elapsedTime;
+   } else {
+     long now = System.currentTimeMillis();
+     seconds = elapsedTime + (now - start) / 1000f;
+   }
+   return seconds;
+ }
+}
 
 class AudioRecorderManager extends ReactContextBaseJavaModule {
 
@@ -104,7 +147,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   @ReactMethod
   public void checkAuthorizationStatus(Promise promise) {
     int permissionCheck = ContextCompat.checkSelfPermission(getCurrentActivity(),
-            Manifest.permission.RECORD_AUDIO);
+      Manifest.permission.RECORD_AUDIO);
     boolean permissionGranted = permissionCheck == PackageManager.PERMISSION_GRANTED;
     promise.resolve(permissionGranted);
   }
@@ -147,23 +190,23 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   }
 
   private int getAudioEncoderFromString(String audioEncoder) {
-   switch (audioEncoder) {
-     case "aac":
-       return MediaRecorder.AudioEncoder.AAC;
-     case "aac_eld":
-       return MediaRecorder.AudioEncoder.AAC_ELD;
-     case "amr_nb":
-       return MediaRecorder.AudioEncoder.AMR_NB;
-     case "amr_wb":
-       return MediaRecorder.AudioEncoder.AMR_WB;
-     case "he_aac":
-       return MediaRecorder.AudioEncoder.HE_AAC;
-     case "vorbis":
-      return MediaRecorder.AudioEncoder.VORBIS;
-     default:
-       Log.d("INVALID_AUDIO_ENCODER", "USING MediaRecorder.AudioEncoder.DEFAULT instead of "+audioEncoder+": "+MediaRecorder.AudioEncoder.DEFAULT);
-       return MediaRecorder.AudioEncoder.DEFAULT;
-   }
+    switch (audioEncoder) {
+      case "aac":
+        return MediaRecorder.AudioEncoder.AAC;
+      case "aac_eld":
+        return MediaRecorder.AudioEncoder.AAC_ELD;
+      case "amr_nb":
+        return MediaRecorder.AudioEncoder.AMR_NB;
+      case "amr_wb":
+        return MediaRecorder.AudioEncoder.AMR_WB;
+      case "he_aac":
+        return MediaRecorder.AudioEncoder.HE_AAC;
+      case "vorbis":
+        return MediaRecorder.AudioEncoder.VORBIS;
+      default:
+        Log.d("INVALID_AUDIO_ENCODER", "USING MediaRecorder.AudioEncoder.DEFAULT instead of "+audioEncoder+": "+MediaRecorder.AudioEncoder.DEFAULT);
+        return MediaRecorder.AudioEncoder.DEFAULT;
+    }
   }
 
   private int getOutputFormatFromString(String outputFormat) {
@@ -208,7 +251,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void stopRecording(Promise promise){
+  public void stopRecording( Promise promise){
     if (!isRecording){
       logAndRejectPromise(promise, "INVALID_STATE", "Please call startRecording before stopping recording");
       return;
@@ -262,6 +305,8 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     result.putString("base64", base64);
 
     sendEvent("recordingFinished", result);
+
+
   }
 
   @ReactMethod
@@ -332,8 +377,8 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
   private void sendEvent(String eventName, Object params) {
     getReactApplicationContext()
-            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-            .emit(eventName, params);
+      .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+      .emit(eventName, params);
   }
 
   private void logAndRejectPromise(Promise promise, String errorCode, String errorMessage) {

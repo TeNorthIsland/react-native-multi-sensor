@@ -1,27 +1,28 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { Component } from 'react';
+
 import {
   StyleSheet,
   Text,
   View,
   TouchableHighlight,
   Platform,
+  Button,
 } from 'react-native';
 
-import Sound from 'react-native-sound';
+import { AudioManager as AudioRecorderManagerObject } from 'react-native-rn-android-lib';
+import { SoundManager as Sound } from 'react-native-rn-android-lib';
+const { AudioRecorder, AudioUtils } = AudioRecorderManagerObject;
 
-import { AudioManager } from 'react-native-rn-android-lib';
-const { AudioRecorder, AudioUtils, AudioSource } = AudioManager;
-
-class AudioExample extends Component {
+class AudioExample extends Component<any, any> {
   state = {
     currentTime: 0.0,
     recording: false,
     paused: false,
     stoppedRecording: false,
     finished: false,
-    // @ts-ignore
-    audioPath: AudioUtils.DocumentDirectoryPath + '/test.aac',
+    // @ts-ignore 控制收录路径
+    audioPath: `/storage/emulated/0/Download/skr/${new Date().getTime()}.mp3`,
     hasPermission: undefined,
   };
   // @ts-ignore
@@ -64,7 +65,7 @@ class AudioExample extends Component {
   }
 
   // @ts-ignore
-  _renderButton(title, onPress, active?: any) {
+  _renderButton(title, onPress?, active?) {
     var style = active ? styles.activeButtonText : styles.buttonText;
 
     return (
@@ -75,7 +76,7 @@ class AudioExample extends Component {
   }
 
   // @ts-ignore
-  _renderPauseButton(onPress, active?: any) {
+  _renderPauseButton(onPress, active?) {
     var style = active ? styles.activeButtonText : styles.buttonText;
     var title = this.state.paused ? 'RESUME' : 'PAUSE';
     return (
@@ -92,7 +93,6 @@ class AudioExample extends Component {
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const filePath = await AudioRecorder.pauseRecording();
       this.setState({ paused: true });
     } catch (error) {
@@ -125,6 +125,9 @@ class AudioExample extends Component {
     try {
       const filePath = await AudioRecorder.stopRecording();
 
+      // 直接存储入库 到指定文件夹
+      console.log('filePath', filePath);
+
       if (Platform.OS === 'android') {
         // @ts-ignore
         this._finishRecording(true, filePath);
@@ -143,16 +146,15 @@ class AudioExample extends Component {
     // These timeouts are a hacky workaround for some issues with react-native-sound.
     // See https://github.com/zmxv/react-native-sound/issues/89.
     setTimeout(() => {
+      // @ts-ignore
       var sound = new Sound(this.state.audioPath, '', (error) => {
         if (error) {
           console.log('failed to load the sound', error);
         }
       });
 
-      console.log('duration', sound.getDuration());
-      sound.setVolume(1);
-
       setTimeout(() => {
+        // @ts-ignore
         sound.play((success) => {
           if (success) {
             console.log('successfully finished playing');
@@ -183,13 +185,13 @@ class AudioExample extends Component {
 
     try {
       const filePath = await AudioRecorder.startRecording();
-      console.log('filePath', filePath);
     } catch (error) {
       console.error(error);
     }
   }
+
   // @ts-ignore
-  _finishRecording(didSucceed, filePath, fileSize?: any) {
+  _finishRecording(didSucceed, filePath, fileSize) {
     this.setState({ finished: didSucceed });
     console.log(
       `Finished recording of duration ${
@@ -215,21 +217,22 @@ class AudioExample extends Component {
           {this._renderButton('STOP', () => {
             this._stop();
           })}
-          {/* {this._renderButton("PAUSE", () => {this._pause()} )} */}
           {this._renderPauseButton(() => {
             this.state.paused ? this._resume() : this._pause();
           })}
-          <Text style={styles.progressText}>{this.state.currentTime}s</Text>
+          <Text style={styles.progressText}>{this.state.currentTime}</Text>
         </View>
+        <Button onPress={() => this.props.changeView('list')} title="返回" />
       </View>
     );
   }
 }
 
-var styles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2b608a',
+    backgroundColor: '#bae7ff',
+    width: '100%',
   },
   controls: {
     justifyContent: 'center',

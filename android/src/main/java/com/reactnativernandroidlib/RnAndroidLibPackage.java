@@ -18,7 +18,10 @@ public class RnAndroidLibPackage implements ReactPackage {
         modules.add(new RnAndroidLibModule(reactContext));
         modules.add(new RNPermissionsModule(reactContext));
         modules.add(new AudioRecorderManager(reactContext));
+        modules.add(new RNSoundModule(reactContext));
+        modules.add(new RNWifiModule(reactContext));
         return modules;
+
     }
 
     @NonNull

@@ -1,6 +1,4 @@
-// import AudioVideo from '../modules/AudioVideo';
-// import AudioVideo from '../components/Camera';
-import AudioVideo from '../components/Video';
+import AudioVideo from '../modules/AudioVideo';
 import FeatureList from '../modules/FeatureList';
 import GPS from '../modules/Gps';
 import Shock from '../modules/Shock';
